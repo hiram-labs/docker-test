@@ -1,0 +1,87 @@
+version: '3.7'
+
+services:
+  selenium-hub:
+    image: 'selenium/hub:4.8.3-20230328'
+    container_name: selenium-hub
+    networks:
+      - interface
+    # ports:
+    #   - "4442:4442"
+    #   - "4443:4443"
+    #   - "4444:4444"
+    # user: '${__CURRENT_UID}'
+
+  chrome:
+    image: 'selenium/node-chrome:4.8.3-20230328'
+    container_name: selenium-chrome
+    restart: unless-stopped
+    volumes:
+      - '/dev/shm:/dev/shm'
+    # shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - VNC_NO_PASSWORD=1
+    networks:
+      - interface
+    # user: '${__CURRENT_UID}'
+
+  edge:
+    image: 'selenium/node-edge:4.8.3-20230328'
+    container_name: selenium-edge
+    restart: unless-stopped
+    volumes:
+      - '/dev/shm:/dev/shm'
+    # shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - VNC_NO_PASSWORD=1
+    networks:
+      - interface
+    # user: '${__CURRENT_UID}'
+
+  firefox:
+    image: 'selenium/node-firefox:4.8.3-20230328'
+    container_name: selenium-firefox
+    restart: unless-stopped
+    volumes:
+      - '/dev/shm:/dev/shm'
+    # shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - VNC_NO_PASSWORD=1
+    networks:
+      - interface
+    # user: '${__CURRENT_UID}'
+
+  selenium-worker:
+    build:
+      context: ./images
+      dockerfile: selenium.worker.dockerfile
+    image: hiramlabs/selenium-worker
+    container_name: selenium-worker
+    volumes:
+      - ~/cdn/public/selenium-worker:/usr/home/www
+      - ./volume/selenium-worker:/usr/home/src
+    depends_on:
+      - selenium-hub
+    networks:
+      - interface
+#    user: '${__CURRENT_UID}'
+
+networks:
+  interface:
+    external:
+      name: interface

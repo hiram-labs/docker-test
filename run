@@ -1,0 +1,25 @@
+#!/bin/bash
+
+__ARG=$1
+
+__START_DOCKER_COMPOSE="start"
+__STOP_DOCKER_COMPOSE="stop"
+
+__CURRENT_UID=$(id -u):$(id -g)
+__CURRENT_UID_DOCKER_GID=$(id -u):$(getent group docker | cut -d: -f3)
+
+export __CURRENT_UID
+export __CURRENT_UID_DOCKER_GID
+
+if [[ "$__ARG" == "$__START_DOCKER_COMPOSE" ]]; then
+    shift
+    docker-compose up -d "$@" \
+        && docker wait selenium-worker \
+        && docker logs selenium-worker
+    docker-compose down
+fi
+
+if [[ "$__ARG" == "$__STOP_DOCKER_COMPOSE" ]]; then
+    shift
+    docker-compose down "$@"
+fi
